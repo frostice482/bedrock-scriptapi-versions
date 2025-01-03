@@ -1,5 +1,5 @@
 namespace PackageVersion {
-	export let pattern = /^(\d+\.\d+\.\d+)(?:-(\w+)\.(\d+\.\d+\.\d+)-(\w+)\.?(\d+)?)?$/
+	export let pattern = /^(\d+\.\d+\.\d+)(?:-(\w+))?(?:\.(\d+\.\d+\.\d+)-(\w+)\.?(\d+)?)?$/
 
 	/**
 	 * Parses package version
