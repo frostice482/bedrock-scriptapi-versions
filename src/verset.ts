@@ -21,7 +21,6 @@ export class PackagesVersionSets extends Map<string, VersionSetList> {
 				try {
 					const versionList = new VersionSetList(await getPackageVersionsCached(pkg))
 					versionList.estimateStableMCVersions()
-					list.set(pkg, versionList)
 					return { pkg, versionList }
 				}
 				catch(e) {
