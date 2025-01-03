@@ -1,0 +1,27 @@
+{
+  "name": "@frostice482/bedrock-scriptapi-versions",
+  "version": "0.0.1",
+  "description": "Unreliably parses Bedrock ScriptAPi versions",
+  "keywords": [
+    "minecraft",
+    "bedrock"
+  ],
+  "license": "MIT",
+  "author": "frostice482",
+  "repository": "github:frostice482/bedrock-scriptapi-versions",
+  "main": "app/index.js",
+  "types": "app/index.d.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^22.10.3",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "build:win": "rd /s /q app & .\\node_modules\\.bin\\tsc.cmd",
+    "build:linux": "rm -rf app && ./node_modules/.bin/tsc"
+  },
+  "files": [
+    "tsconfig.json",
+    "app"
+  ]
+}
