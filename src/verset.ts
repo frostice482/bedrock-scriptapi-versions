@@ -2,11 +2,39 @@ import PackageVersion, { PackageMCVersion, PackageReleaseType } from "./package_
 import Sortable from "./lib/sortable.js"
 import { sortMap } from "./lib/util.js"
 import MinecraftVersions from "./mcver.js"
+import { getPackageVersionsCached } from "./lib/metadata_cached.js"
 
 /**
  * Mapping of packages and its list of versions
  */
 export class PackagesVersionSets extends Map<string, VersionSetList> {
+	/**
+	 * Creates PackagesVersionSets from package names. Uses `getPackageVersionsCached` func to retreive versions
+	 * @param packages Package names
+	 * @param requireAll Requires all package to be successfully loaded, otherwise throws error
+	 */
+	static async from(packages: string[], requireAll = false) {
+		const list = new PackagesVersionSets()
+
+		const arr = await Promise.all(
+			packages.map(async pkg => {
+				try {
+					const versionList = new VersionSetList(await getPackageVersionsCached(pkg))
+					versionList.estimateStableMCVersions()
+					list.set(pkg, versionList)
+					return { pkg, versionList }
+				}
+				catch(e) {
+					if (requireAll) throw e
+					console.error(`Failed to load package '${pkg}':`, e)
+				}
+			})
+		)
+		for (const entry of arr) if (entry) list.set(entry.pkg, entry.versionList)
+
+		return list
+	}
+
 	/**
 	 * Gets packages latest version releases from Minecraft version
 	 * @param mcVersion Minecraft version
@@ -32,8 +60,13 @@ export class PackagesVersionSets extends Map<string, VersionSetList> {
  * List of versions
  */
 export class VersionSetList {
-	constructor(versions?: Iterable<PackageVersion>) {
-		if (versions) for (const version of versions) this.addVersion(version)
+	constructor(versions?: Iterable<PackageVersion | string>) {
+		if (versions) {
+			for (let version of versions) {
+				const parsed = typeof version === 'string' ? PackageVersion.parse(version) : version
+				if (parsed) this.addVersion(parsed)
+			}
+		}
 	}
 
 	list = new Map<string, VersionSet>()
@@ -71,6 +104,7 @@ export class VersionSetList {
 			if (prev && !prev.mc) prev.mc = set.betaOldestStableMc
 			prev = set.stableRelease
 		}
+		return this
 	}
 
 	/**
@@ -127,7 +161,7 @@ export class VersionSet {
 	@Sortable.causeUnsort
 	addRelease(version: PackageVersion) {
 		const mc = version.mc
-		const mcver = mc?.versionString ?? ''
+		const mcver = mc?.versionId ?? ''
 
 		switch (version.type) {
 			case PackageReleaseType.Beta:
@@ -165,10 +199,10 @@ export class VersionSet {
 				this.stableRelease?.mc && PackageVersion.compareMc(this.stableRelease.mc, mcVersion) <= 0 ? this.stableRelease : undefined
 			],
 			[PackageReleaseType.RC,
-				this.rcReleases.get(mcVersion.versionString)
+				this.rcReleases.get(mcVersion.versionId)
 			],
 			[PackageReleaseType.Beta,
-				this.betaReleases.get(mcVersion.versionString)
+				this.betaReleases.get(mcVersion.versionId)
 			],
 		])
 	}
