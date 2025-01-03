@@ -1,4 +1,5 @@
 import Sortable from "./lib/sortable.js";
+import { sortMap } from "./lib/util.js";
 import PackageVersion, { PackageMCVersion } from "./package_version.js";
 
 export default class MinecraftVersions {
@@ -6,8 +7,8 @@ export default class MinecraftVersions {
 		if (versions) for (const version of versions) this.addVersion(version)
 	}
 
-	stables: PackageMCVersion[] = []
-	previews: PackageMCVersion[] = []
+	stables = new Map<string, PackageMCVersion>()
+	previews = new Map<string, PackageMCVersion>()
 
 	latestStable = PackageMCVersion.minStable
 	latestPreview = PackageMCVersion.minPreview
@@ -16,13 +17,13 @@ export default class MinecraftVersions {
 	addVersion(version: PackageMCVersion) {
 		switch (version.type) {
 			case PackageVersion.MCReleaseType.Preview:
-				this.previews.push(version)
+				this.previews.set(version.versionId, version)
 				if (PackageVersion.compareMc(version, this.latestPreview) > 0)
 					this.latestPreview = version
 			break
 
 			case PackageVersion.MCReleaseType.Stable:
-				this.stables.push(version)
+				this.stables.set(version.versionId, version)
 				if (PackageVersion.compareMc(version, this.latestStable) > 0)
 					this.latestStable = version
 			break
@@ -31,8 +32,8 @@ export default class MinecraftVersions {
 
 	@Sortable.causeSort
 	sort() {
-		this.stables.sort(PackageVersion.compareMc)
-		this.previews.sort(PackageVersion.compareMc)
+		sortMap(this.stables, PackageVersion.compareMc)
+		sortMap(this.previews, PackageVersion.compareMc)
 	}
 
 	*[Symbol.iterator]() {
