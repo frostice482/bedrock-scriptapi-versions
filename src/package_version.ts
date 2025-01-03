@@ -6,7 +6,7 @@ namespace PackageVersion {
 	 * @param packageVersion Package version in string
 	 * @returns Package version
 	 */
-	export function parse(packageVersion: string): Version | undefined {
+	export function parse(packageVersion: string): PackageVersion | undefined {
 		const m = packageVersion.match(pattern)
 		if (!m) return
 
@@ -17,12 +17,9 @@ namespace PackageVersion {
 			raw: packageVersion,
 			version: version.split('.').map(Number),
 			versionString: version,
+			versionId: version + '/' + releaseType,
 			type: releaseTypeMap[releaseType] ?? ReleaseType.Unknown,
-			mc: mcVersion ? {
-				version: mcVersion.split('.').map(Number),
-				versionString: mcVersion,
-				type: mcReleaseTypeMap[mcReleaseType] ?? MCReleaseType.Unknown
-			} : undefined
+			mc: mcVersion ? MCVersion(mcReleaseTypeMap[mcReleaseType] ?? MCReleaseType.Unknown, mcVersion) : undefined
 		}
 	}
 
@@ -63,7 +60,7 @@ namespace PackageVersion {
 	 * @param b Version 2
 	 * @returns A - B
 	 */
-	export function comparePackage(a: Version, b: Version) {
+	export function comparePackage(a: PackageVersion, b: PackageVersion) {
 		return compare(a.version, b.version) // compare version
 			|| a.type - b.type // compare type
 			|| a.mc && b.mc && compareMc(a.mc, b.mc)
@@ -95,10 +92,14 @@ namespace PackageVersion {
 	}
 
 	export interface Version {
-		raw: string
-		version: number[]
-		versionString: string
-		type: ReleaseType
+		readonly version: number[]
+		readonly versionString: string
+		readonly versionId: string
+	}
+
+	export interface PackageVersion extends Version {
+		readonly raw: string
+		readonly type: ReleaseType
 		mc?: MCVersion
 	}
 
@@ -116,7 +117,8 @@ namespace PackageVersion {
 		return {
 			type,
 			version: ver,
-			versionString: verStr
+			versionString: verStr,
+			versionId: verStr + '/' + type,
 		}
 	}
 
@@ -127,14 +129,12 @@ namespace PackageVersion {
 		export const maxPreview: MCVersion = MCVersion(MCReleaseType.Preview, [Infinity, 0, 0, 0])
 	}
 
-	export interface MCVersion {
-		version: number[]
-		versionString: string
-		type: MCReleaseType
+	export interface MCVersion extends Version {
+		readonly type: MCReleaseType
 	}
 }
 
-type PackageVersion = PackageVersion.Version
+type PackageVersion = PackageVersion.PackageVersion
 export const PackageMCVersion = PackageVersion.MCVersion
 export type PackageMCVersion = PackageVersion.MCVersion
 export const PackageReleaseType = PackageVersion.ReleaseType
