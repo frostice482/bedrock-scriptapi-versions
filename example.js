@@ -1,4 +1,4 @@
-import { getPackageVersionsCached, PackageVersion, VersionSetList, PackageReleaseType, PackagesVersionSets } from './app/index.js'
+import { PackageReleaseType, PackagesVersionSets } from './app/index.js'
 
 const packages = [
 	'@minecraft/server',
@@ -9,28 +9,11 @@ const packages = [
 ]
 
 // to handle list of packages and its version list
-const packageVersions = new PackagesVersionSets(
-	await Promise.all(
-		packages.map(async packageName => {
-			// get package versions from npm registry
-			// cached versions is stored in OS tmpdir
-			const versions = await getPackageVersionsCached(packageName)
-
-			// parse each version and put it to VersionSetList
-			const versionSetList = new VersionSetList(versions.map(PackageVersion.parse).filter(v => v))
-			// determine stable MC versions for stable releases
-			versionSetList.estimateStableMCVersions()
-
-			return [packageName, versionSetList]
-		})
-	)
-)
-
+const packagesVersionSets = await PackagesVersionSets.from(packages)
 // gets Minecraft versions
-const mcVersions = packageVersions.getMcVersions()
-
+const mcVersions = packagesVersionSets.getMcVersions()
 // gets package versions from latest stable version of Minecraft
-const mcStableVersions = packageVersions.getMcVersionReleases(mcVersions.latestStable)
+const mcStableVersions = packagesVersionSets.getMcVersionReleases(mcVersions.latestStable)
 
 console.log(`Latest stable: ${mcVersions.latestStable.versionString}`)
 for (const [packageName, releases] of mcStableVersions) {
