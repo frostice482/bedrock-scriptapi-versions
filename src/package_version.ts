@@ -17,7 +17,7 @@ namespace PackageVersion {
 			raw: packageVersion,
 			version: version.split('.').map(Number),
 			versionString: version,
-			versionId: version + '/' + releaseType,
+			versionId: releaseType === 'beta' ? version + '-beta' : version,
 			type: releaseTypeMap[releaseType] ?? ReleaseType.Unknown,
 			mc: mcVersion ? MCVersion(mcReleaseTypeMap[mcReleaseType] ?? MCReleaseType.Unknown, mcVersion) : undefined
 		}
